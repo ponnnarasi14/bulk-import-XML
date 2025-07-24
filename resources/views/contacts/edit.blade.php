@@ -25,7 +25,7 @@
                     <input type="text" class="form-control" id="name" name="name" value={{ $contact->name }}>
                 </div>
                 <div class="form-group col-md-4">
-                    <label>Contact Number {{$contact->phone}}</label>
+                    <label>Contact Number </label>
                     <input type="text" class="form-control" id="name" name="phone" value={{ htmlspecialchars($contact->phone) }} required>
                 </div>
                 <div class="form-group col-md-4">
