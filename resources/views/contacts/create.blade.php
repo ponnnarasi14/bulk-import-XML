@@ -18,7 +18,7 @@
                 @csrf
                 <div class="form-group col-md-4">
                     <label>Name</label>
-                    <input type="text" class="form-control" id="name" name="name" placeholder="Enter Name" value="{{ old('name') }}">
+                    <input type="text" class="form-control" id="name" name="name" placeholder="Enter Name" value="{{ old('name') }}" required>
                 </div>
                 <div class="form-group col-md-4">
                     <label>Name</label>

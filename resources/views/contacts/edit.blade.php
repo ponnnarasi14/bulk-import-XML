@@ -9,7 +9,7 @@
                 Add New Contact
             </a>
             <a href="{{ route('contacts.index') }}" class="btn btn-success mb-3">
-                list  Contact
+                List  Contact
             </a>
             
             @if(session('success'))
@@ -21,12 +21,12 @@
                 @csrf
                 @method('PUT')
                 <div class="form-group col-md-4">
-                    <label>Name</label>
-                    <input type="text" class="form-control" id="name" name="name" value={{ $contact->name }}>
+                    <label> Name</label>
+                    <input type="text" class="form-control" id="name" name="name" value="{{ old('name', $contact->name) }}" required>
                 </div>
                 <div class="form-group col-md-4">
-                    <label>Contact Number </label>
-                    <input type="text" class="form-control" id="name" name="phone" value={{ htmlspecialchars($contact->phone) }} required>
+                    <label> Contact Number </label>
+                    <input type="text" class="form-control" id="phone" name="phone"  value="{{ old('phone', $contact->phone) }}" required>
                 </div>
                 <div class="form-group col-md-4" style="margin-top: 10px;">
                 <button type="submit">Update</button>

@@ -40,16 +40,18 @@ class ContactController extends Controller
                 'required',
                 'string',
                 'max:20',
-                'regex:/^\+?[0-9\s\-\(\)]{6,20}$/', // Allows +, digits, spaces, dashes, parentheses
-                Rule::unique('contacts', 'phone'),
+                'regex:/^[\d\s\-\+\(\)]+$/',
+                'unique:contacts,phone',
             ],
         ]);
 
         try
         {
+            //$phone_normalized  = preg_replace('/[^\d+]/', '', $validated['phone'];
+
             Contact::create([
                 'name'  => $validated['name'],
-                'phone' => preg_replace('/[^\d+]/', '', $validated['phone']),
+                'phone' => $validated['phone'],
             ]);
             return redirect()->route('contacts.index')->with('success', 'Contact Added Successfully');
           
@@ -90,14 +92,15 @@ class ContactController extends Controller
                 'required',
                 'string',
                 'max:20',
-                'regex:/^\+?[0-9\s\-\(\)]{6,20}$/',
-                Rule::unique('contacts', 'phone')->ignore($id)
+                'regex:/^[\d\s\-\+\(\)]+$/',
+                Rule::unique('contacts', 'phone')->ignore($id),
             ],
         ]);
 
         try{
+
             // Remove all whitespace from the phone number
-            $validated['phone'] = preg_replace('/[^\d+]/', '', $validated['phone']);
+            //$validated['phone'] = preg_replace('/[^\d+]/', '', $validated['phone']);
 
             $contact = Contact::findOrFail($id);
 
@@ -183,19 +186,12 @@ class ContactController extends Controller
                         throw new \Exception("Missing name or phone in contact #" . ($index + 1));
                     }
 
-                    $name       = (string)$contact->name;
-                    $rawPhone   = (string)$contact->phone;
+                    $name   = (string)$contact->name;
+                    $phone  = (string)$contact->phone;
 
-                    // Allow numbers with +, spaces, dashes, parentheses
-                    if (!preg_match('/^\+?[0-9\s\-\(\)]{6,20}$/', $rawPhone)) {
-                        throw new \Exception("Invalid phone format for contact #" . ($index + 1));
-                    }
-
-                    // Normalize phone: keep only digits and optional leading +
-                    $normalizedPhone = preg_replace('/[^\d+]/', '', $rawPhone);
-
-                    // Avoid duplicates based on normalized phone
-                    if (Contact::where('phone', $normalizedPhone)->exists()) {
+                    
+                    // Avoid duplicates based on phone
+                    if (Contact::where('phone', $phone)->exists()) {
                         $duplicateCount++;
                         continue;
                     }
@@ -203,7 +199,7 @@ class ContactController extends Controller
                     // Save contact
                     Contact::create([
                         'name'  => $name,
-                        'phone' => $normalizedPhone,
+                        'phone' => $phone,
                     ]);
 
                     $importedCount++;
