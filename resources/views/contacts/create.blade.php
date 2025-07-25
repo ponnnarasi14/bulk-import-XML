@@ -24,7 +24,7 @@
                     <label>Name</label>
                     <input type="text" class="form-control" id="name" name="phone" placeholder="Enter Contact No" value="{{ old('phone') }}" required>
                 </div>
-                <div class="form-group col-md-4">
+                <div class="form-group col-md-4" style="margin-top: 10px;">
                     <button type="submit">Submit</button>
                     <a href="{{ route('contacts.index') }}" class="btn btn-secondary">Cancel</a>
                 </div>

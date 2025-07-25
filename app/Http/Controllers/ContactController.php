@@ -6,6 +6,7 @@ use App\Models\Contact;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class ContactController extends Controller
 {
@@ -34,16 +35,23 @@ class ContactController extends Controller
     {
         
         $validated = $request->validate([
-            'name'  => 'required|string|max:255',
-            'phone' => 'required|string|unique:contacts,phone|max:20'
+                'name'  => 'required|string|max:255',
+                'phone' => [
+                'required',
+                'string',
+                'max:20',
+                'regex:/^\+?[0-9\s\-\(\)]{6,20}$/', // Allows +, digits, spaces, dashes, parentheses
+                Rule::unique('contacts', 'phone'),
+            ],
         ]);
+
         try
         {
             Contact::create([
                 'name'  => $validated['name'],
-                'phone' => $validated['phone']
+                'phone' => preg_replace('/[^\d+]/', '', $validated['phone']),
             ]);
-            return redirect()->route('contacts.index')->with(['success' => 'Contact Added Successfully']);
+            return redirect()->route('contacts.index')->with('success', 'Contact Added Successfully');
           
         }
         catch(\Exception $e)
@@ -78,17 +86,27 @@ class ContactController extends Controller
     {
         $validated = $request->validate([
             'name'  => 'required|string|max:255',
-            'phone' => 'required|string|max:20|unique:contacts,phone,'.$id
+            'phone' => [
+                'required',
+                'string',
+                'max:20',
+                'regex:/^\+?[0-9\s\-\(\)]{6,20}$/',
+                Rule::unique('contacts', 'phone')->ignore($id)
+            ],
         ]);
+
         try{
+            // Remove all whitespace from the phone number
+            $validated['phone'] = preg_replace('/[^\d+]/', '', $validated['phone']);
+
             $contact = Contact::findOrFail($id);
 
             $contact->update($validated);
 
-            return redirect()->route('contacts.index')->with(['success', 'Contact Updated Successfully']);
+            return redirect()->route('contacts.index')->with('success', 'Contact Updated Successfully');
         }catch(\Exception $e)
         {
-            return redirect()->back()->withInput()->with(['error', 'Failed to Update Contact:' .$e->getMessage()]);
+            return redirect()->back()->withInput()->with('error', 'Failed to Update Contact:' .$e->getMessage());
         }
        
     }
@@ -99,10 +117,15 @@ class ContactController extends Controller
     public function destroy(string $id)
     {
         try{
+
             $contact = Contact::findOrFail($id);
+
             $contact->delete();
+
             return redirect()->route('contacts.index')->with('success', 'Contact Deleted Successfully');
+
         }catch(\Exception $e){
+
             return redirect()->back()->with('error', 'Failed to Delete contact:' .$e->getMessage());
         }
        
@@ -115,7 +138,7 @@ class ContactController extends Controller
 
     public function import(Request $request)
     {
-        // Step 1: Basic Validation
+        // Step 1 Basic Validation
         $validator = Validator::make($request->all(), [
             'xml_file' => [
                 'required',
@@ -131,12 +154,11 @@ class ContactController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
+
+            return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        // Step 2: XML Content Validation
+        // Step 2 XML Content Validation
         try {
             $xml = simplexml_load_file($request->file('xml_file')->path());
             
@@ -148,26 +170,40 @@ class ContactController extends Controller
                 throw new \Exception('XML must contain <contact> elements');
             }
 
-            // Step 3: Process Contacts
+            // Step 3 Process Contacts
             $importedCount = 0;
             $duplicateCount = 0;
             $errors = [];
 
             foreach ($xml->contact as $index => $contact) {
                 try {
+
                     // Validate individual contact
                     if (empty($contact->name) || empty($contact->phone)) {
                         throw new \Exception("Missing name or phone in contact #" . ($index + 1));
                     }
 
-                    if (Contact::where('phone', $contact->phone)->exists()) {
-                        $duplicateCount++;
-                        continue; // Skip without error
+                    $name       = (string)$contact->name;
+                    $rawPhone   = (string)$contact->phone;
+
+                    // Allow numbers with +, spaces, dashes, parentheses
+                    if (!preg_match('/^\+?[0-9\s\-\(\)]{6,20}$/', $rawPhone)) {
+                        throw new \Exception("Invalid phone format for contact #" . ($index + 1));
                     }
 
+                    // Normalize phone: keep only digits and optional leading +
+                    $normalizedPhone = preg_replace('/[^\d+]/', '', $rawPhone);
+
+                    // Avoid duplicates based on normalized phone
+                    if (Contact::where('phone', $normalizedPhone)->exists()) {
+                        $duplicateCount++;
+                        continue;
+                    }
+
+                    // Save contact
                     Contact::create([
-                        'name' => (string)$contact->name,
-                        'phone' => (string)$contact->phone,
+                        'name'  => $name,
+                        'phone' => $normalizedPhone,
                     ]);
 
                     $importedCount++;
@@ -176,7 +212,7 @@ class ContactController extends Controller
                 }
             }
 
-            // Prepare response
+            
             if ($importedCount > 0) {
                 $message = "Successfully imported {$importedCount} contacts";
                 

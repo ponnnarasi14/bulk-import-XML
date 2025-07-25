@@ -28,7 +28,7 @@
                     <label>Contact Number </label>
                     <input type="text" class="form-control" id="name" name="phone" value={{ htmlspecialchars($contact->phone) }} required>
                 </div>
-                <div class="form-group col-md-4">
+                <div class="form-group col-md-4" style="margin-top: 10px;">
                 <button type="submit">Update</button>
                 <a href="{{ route('contacts.index') }}" class="btn btn-secondary">Cancel</a>
                 </div>

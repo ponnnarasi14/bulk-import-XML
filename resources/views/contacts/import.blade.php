@@ -7,7 +7,7 @@
             <h1>Contacts</h1>
            
             <a href="{{ route('contacts.index') }}" class="btn btn-success mb-3">
-                list  Contact
+                List  Contact
             </a>
             
             @if($errors->any())
@@ -38,7 +38,7 @@
                     <input type="file" class="form-control" name="xml_file" accept=".xml" required>
                     <small class="form-text text-muted">Upload an XML file with contacts data (max 2MB)</small>
                 </div>
-                <div class="form-group col-md-4">
+                <div class="form-group col-md-4" style="margin-top: 10px;">
                     <button type="submit">Import XML</button>
                     <a href="{{ route('contacts.index') }}" class="btn btn-secondary">Cancel</a>
                 </div>
