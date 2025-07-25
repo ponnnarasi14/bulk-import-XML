@@ -33,7 +33,7 @@ class ContactController extends Controller
      */
     public function store(Request $request)
     {
-        
+        //instead controller validate we also use App\Http\Requests\Contact\StoreRequest;
         $validated = $request->validate([
                 'name'  => 'required|string|max:255',
                 'phone' => [
@@ -86,6 +86,7 @@ class ContactController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        //instead controller validate we also use App\Http\Requests\Contact\UpdateRequest;
         $validated = $request->validate([
             'name'  => 'required|string|max:255',
             'phone' => [
